@@ -14,9 +14,9 @@ impl std::fmt::Display for Token {
 
 #[derive(Debug, PartialEq)]
 pub enum TokenType {
-    // Single-character tokens.
-    // LEFTPAREN,
-    // RIGHTPAREN,
+    // -- Single-character tokens.
+    LeftParen,
+    RightParen,
     // LEFTBRACE,
     // RIGHTBRACE,
     // COMMA,
@@ -27,22 +27,22 @@ pub enum TokenType {
     // SLASH,
     // STAR,
 
-    // One or two character tokens.
+    // -- One or two character tokens.
     // BANG,
     // BANGEQUAL,
     Equal,
-    // EQUALEQUAL,
+    EqualEqual,
     // GREATER,
     // GREATEREQUAL,
     // LESS,
     // LESSEQUAL,
 
-    // Literals.
+    // -- Literals.
     // IDENTIFIER,
     String,
-    // NUMBER,
+    Number,
 
-    // Keywords.
+    // -- Keywords.
     // AND,
     // CLASS,
     // ELSE,

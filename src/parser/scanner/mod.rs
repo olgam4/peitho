@@ -13,20 +13,19 @@ impl Scanner {
         let source = self.source;
         let contents = source;
 
-        println!("scanning... {}", &contents);
-
         let mut tokens: Vec<Token> = Vec::new();
         let mut current = 0;
         let mut line = 1;
 
         while current < contents.len() {
             let c = Scanner::advance(&contents, &mut current);
-            println!("currently evaluating: {}", c);
             let new_token = match c {
-                '+' => Some(Token::new(TokenType::Plus, "".to_string(), "".to_string(), line)),
+                '(' => Some(Token::new(TokenType::LeftParen, "(".to_string(), "(".to_string(), line)),
+                ')' => Some(Token::new(TokenType::RightParen, ")".to_string(), ")".to_string(), line)),
+                '+' => Some(Token::new(TokenType::Plus, "+".to_string(), "+".to_string(), line)),
                 '=' => {
                     if Scanner::next('=', &contents, &mut current) {
-                        Some(Token::new(TokenType::Equal, "".to_string(), "".to_string(), line))
+                        Some(Token::new(TokenType::EqualEqual, "".to_string(), "".to_string(), line))
                     } else {
                         Some(Token::new(TokenType::Equal, "".to_string(), "".to_string(), line))
                     }
@@ -66,6 +65,15 @@ impl Scanner {
                         }
                     };
                     Some(Token::new(token_type, identifier.clone(), identifier, line))
+                }
+                '0'..='9' => {
+                    let number = Scanner::number(&contents, &mut current);
+                    Some(Token::new(
+                        TokenType::Number,
+                        number.to_string(),
+                        number.to_string(),
+                        line,
+                    ))
                 }
                 _ => {
                     program.error(line, format!("Unexpected character: {}", c).as_str());
@@ -114,11 +122,20 @@ impl Scanner {
         Ok(result)
     }
 
+    fn number(contents: &str, current: &mut usize) -> usize {
+        let mut result = contents.chars().nth(*current - 1).unwrap().to_string();
+        while Scanner::peek(contents, *current).is_digit(10) {
+            let a = Scanner::advance(contents, current);
+            result.push(a);
+
+        }
+        result.parse::<usize>().unwrap()
+    }
+
     fn identifier(contents: &str, current: &mut usize) -> String {
         let mut result = contents.chars().nth(*current - 1).unwrap().to_string();
         while Scanner::peek(contents, *current).is_alphanumeric() {
             result.push(Scanner::advance(contents, current));
-            println!("building... {}", result);
         }
         result
     }
@@ -140,7 +157,6 @@ mod tests {
         let source = "print \"Hello, world!\"";
         let mut program = Parser::new();
         let tokens = Scanner::new(source.to_string()).scan(&mut program);
-        println!("{:?}", tokens);
 
         let expected = vec![
             Token::new(
