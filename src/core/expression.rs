@@ -58,5 +58,6 @@ pub enum Expression {
         left: ExpressionRef,
         right: ExpressionRef,
     },
+    None {},
 }
 pub type ExpressionRef = Rc<Expression>;

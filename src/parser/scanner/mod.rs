@@ -23,17 +23,22 @@ impl Scanner {
             let c = Scanner::advance(&contents, &mut current);
             println!("currently evaluating: {}", c);
             let new_token = match c {
-                '+' => Some(Token::new(TokenType::PLUS, "".to_string(), "".to_string(), line)),
+                '+' => Some(Token::new(TokenType::Plus, "".to_string(), "".to_string(), line)),
                 '=' => {
                     if Scanner::next('=', &contents, &mut current) {
-                        Some(Token::new(TokenType::EQUAL, "".to_string(), "".to_string(), line))
+                        Some(Token::new(TokenType::Equal, "".to_string(), "".to_string(), line))
                     } else {
-                        Some(Token::new(TokenType::EQUAL, "".to_string(), "".to_string(), line))
+                        Some(Token::new(TokenType::Equal, "".to_string(), "".to_string(), line))
                     }
                 }
                 '\n' => {
                     line += 1;
-                    None
+                    Some(Token::new(
+                        TokenType::EOL,
+                        "".to_string(),
+                        "".to_string(),
+                        line,
+                    ))
                 }
                 ' ' | '\r' | '\t' => None,
                 '"' => {
@@ -45,7 +50,7 @@ impl Scanner {
                         }
                     };
                     Some(Token::new(
-                        TokenType::STRING,
+                        TokenType::String,
                         string_literal.clone(),
                         string_literal,
                         line,
@@ -120,7 +125,7 @@ impl Scanner {
 
     fn keyword(identifier: &str) -> Result<TokenType, String> {
         match identifier {
-            "print" => Ok(TokenType::PRINT),
+            "print" => Ok(TokenType::Print),
             _ => Err(format!("Unrecognized keyword: {}", identifier)),
         }
     }
@@ -139,13 +144,13 @@ mod tests {
 
         let expected = vec![
             Token::new(
-                TokenType::PRINT,
+                TokenType::Print,
                 "print".to_string(),
                 "print".to_string(),
                 1,
             ),
             Token::new(
-                TokenType::STRING,
+                TokenType::String,
                 "Hello, world!".to_string(),
                 "Hello, world!".to_string(),
                 1,

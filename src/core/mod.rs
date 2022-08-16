@@ -1,6 +1,3 @@
-#[macro_use]
-pub mod utils;
-
 pub mod evaluation;
 pub mod expression;
 pub mod interpretation;

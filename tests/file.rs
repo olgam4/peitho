@@ -1,26 +1,26 @@
-mod tests {
+#[cfg(test)]
+mod parser {
     use std::fs::File;
 
     use taupe::parser::Parser;
 
-
     #[test]
-    pub fn verify_that_it_loads() {
+    pub fn verify_that_parser_loads() {
         let args = vec!["tests/assets/invalid.po".to_string()];
         let file = File::open(&args[0]).unwrap();
-        let mut program = Parser::new_from(file);
+        let mut parser = Parser::new_from(file);
 
-        program.run_source();
+        let _ = parser.parse_source();
     }
 
     #[test]
-    pub fn verify_that_it_fails_when_invalid_token_is_read() {
+    pub fn verify_that_parser_fails_when_invalid_token_is_read() {
         let args = vec!["tests/assets/invalid.po".to_string()];
         let file = File::open(&args[0]).unwrap();
-        let mut program = Parser::new_from(file);
+        let mut parser = Parser::new_from(file);
 
-        program.run_source();
+        let result = parser.parse_source();
 
-        assert!(program.in_error);
+        assert!(result.is_err());
     }
 }

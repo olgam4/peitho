@@ -11,6 +11,7 @@ pub fn evaluate(
     state: &Option<HashMap<String, ExpressionRef>>,
 ) -> Result<Value, Error> {
     match expr {
+        Expression::None {} => Ok(Value::None),
         Expression::Sum { left, right } => {
             let left_value = evaluate(&left, state)?;
             let right_value = evaluate(&right, state)?;
@@ -137,8 +138,26 @@ pub fn evaluate(
             }
         }
         Expression::Print { expression } => {
-            let value = evaluate(&expression, state)?;
-            println!("brrrr... {:?}", value);
+            let string = match evaluate(&expression, state)? {
+                Value::String(val) => val,
+                Value::Integer(val) => val.to_string(),
+                Value::Float(val) => val.to_string(),
+                Value::Boolean(val) => val.to_string(),
+                Value::State(val) => {
+                    let mut string = String::new();
+                    for (key, value) in val.unwrap().iter() {
+                        string.push_str(&format!(
+                            "{} = {}\n",
+                            key,
+                            evaluate(&value, state).unwrap()
+                        ));
+                    }
+                    string
+                }
+                Value::Unit => "".to_string(),
+                Value::None => "None".to_string(),
+            };
+            println!("{}", string);
             Ok(Value::Unit)
         }
         Expression::Chain { left, right } => {

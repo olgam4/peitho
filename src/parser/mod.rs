@@ -1,10 +1,8 @@
-mod scanner;
-mod token;
+pub mod scanner;
+pub mod token;
 
-use std::{
-    fs::File,
-    io::{self, Read, Write},
-};
+use std::{fs::File, io::Read};
+use token::Token;
 
 use self::scanner::Scanner;
 
@@ -33,55 +31,28 @@ impl Parser {
         }
     }
 
-    pub fn main(&mut self, args: Vec<String>) {
-        match args.len() {
-            0 => match self.source {
-                Some(_) => self.run_source(),
-                None => self.run_prompt(),
-            },
-            1 => self.run_prompt(),
-            2 => {
-                println!("Running {}", args[1]);
-                self.source = Some(File::open(&args[1]).unwrap());
-                self.run_source()
-            }
-            _ => println!("Usage: peitho [script]"),
-        };
-    }
-
-    pub fn run_source(&mut self) {
+    pub fn parse_source(&mut self) -> Result<Vec<Token>, String> {
         let mut contents = String::new();
 
-        if let Some(mut source) = self.source.as_ref() {
-            source.read_to_string(&mut contents).unwrap();
-            self.run(&contents);
-        } else {
-            panic!("No source file provided");
-        }
+        let result = self
+            .source
+            .as_ref()
+            .unwrap_or_else(|| panic!("No source file provided"))
+            .read_to_string(&mut contents)
+            .and_then(|_| {
+                let tokens = self.parse(&contents);
+                Ok(tokens)
+            });
 
         if self.in_error {
-            println!("Exiting with error...");
+            Err("Parse error".to_string())
+        } else {
+            Ok(result.unwrap())
         }
     }
 
-    fn run_prompt(&mut self) {
-        let mut contents = String::new();
-        while let Ok(n) = io::stdin().read_line(&mut contents) {
-            write!(io::stdout(), "> ").unwrap();
-            if n == 0 {
-                break;
-            }
-            self.run(&contents);
-            contents.clear();
-            self.in_error = false;
-        }
-    }
-
-    fn run(&mut self, source: &str) {
-        let tokens = Scanner::new(source.to_string()).scan(self);
-        for token in tokens {
-            println!("{}", token);
-        }
+    pub fn parse(&mut self, source: &str) -> Vec<Token> {
+        Scanner::new(source.to_string()).scan(self)
     }
 
     fn error(&mut self, line: usize, msg: &str) {

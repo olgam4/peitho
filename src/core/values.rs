@@ -11,6 +11,13 @@ pub enum Value {
     Boolean(bool),
     State(Option<HashMap<String, ExpressionRef>>),
     Unit,
+    None,
+}
+
+impl std::fmt::Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]

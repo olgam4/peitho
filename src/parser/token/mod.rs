@@ -1,9 +1,9 @@
 #[derive(new, Debug, PartialEq)]
 pub struct Token {
-    token_type: TokenType,
-    lexeme: String,
-    literal: String,
-    line: usize,
+    pub token_type: TokenType,
+    pub lexeme: String,
+    pub literal: String,
+    pub line: usize,
 }
 
 impl std::fmt::Display for Token {
@@ -22,7 +22,7 @@ pub enum TokenType {
     // COMMA,
     // DOT,
     // MINUS,
-    PLUS,
+    Plus,
     // SEMICOLON,
     // SLASH,
     // STAR,
@@ -30,7 +30,7 @@ pub enum TokenType {
     // One or two character tokens.
     // BANG,
     // BANGEQUAL,
-    EQUAL,
+    Equal,
     // EQUALEQUAL,
     // GREATER,
     // GREATEREQUAL,
@@ -39,7 +39,7 @@ pub enum TokenType {
 
     // Literals.
     // IDENTIFIER,
-    STRING,
+    String,
     // NUMBER,
 
     // Keywords.
@@ -52,7 +52,7 @@ pub enum TokenType {
     // IF,
     // NIL,
     // OR,
-    PRINT,
+    Print,
     // RETURN,
     // SUPER,
     // THIS,
@@ -61,5 +61,6 @@ pub enum TokenType {
     // WHILE,
 
     // EOF,
+    EOL,
 }
 
