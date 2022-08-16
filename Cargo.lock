@@ -14,13 +14,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "peitho"
-version = "0.1.0"
-dependencies = [
- "derive-new",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -47,6 +40,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "taupe"
+version = "0.1.0"
+dependencies = [
+ "derive-new",
 ]
 
 [[package]]

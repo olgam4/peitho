@@ -1,6 +1,6 @@
 use super::{
     token::{Token, TokenType},
-    Program,
+    Parser,
 };
 
 #[derive(new)]
@@ -9,7 +9,7 @@ pub struct Scanner {
 }
 
 impl Scanner {
-    pub fn scan(self, program: &mut Program) -> Vec<Token> {
+    pub fn scan(self, program: &mut Parser) -> Vec<Token> {
         let source = self.source;
         let contents = source;
 
@@ -133,7 +133,7 @@ mod tests {
     #[test]
     fn test_scanner() {
         let source = "print \"Hello, world!\"";
-        let mut program = Program::new();
+        let mut program = Parser::new();
         let tokens = Scanner::new(source.to_string()).scan(&mut program);
         println!("{:?}", tokens);
 

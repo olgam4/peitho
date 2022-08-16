@@ -8,26 +8,26 @@ use std::{
 
 use self::scanner::Scanner;
 
-pub struct Program {
+pub struct Parser {
     pub in_error: bool,
     source: Option<File>,
 }
 
-impl Program {
+impl Parser {
     #[cfg(test)]
     pub fn test_only_new() {
-        Program::new();
+        Parser::new();
     }
 
-    pub fn new_from(source: File) -> Program {
-        Program {
+    pub fn new_from(source: File) -> Parser {
+        Parser {
             in_error: false,
             source: Some(source),
         }
     }
 
-    pub fn new() -> Program {
-        Program {
+    pub fn new() -> Parser {
+        Parser {
             in_error: false,
             source: None,
         }

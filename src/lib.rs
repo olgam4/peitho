@@ -1,4 +1,5 @@
 #[macro_use]
 extern crate derive_new;
 
-pub mod program;
+pub mod parser;
+pub mod core;

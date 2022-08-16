@@ -1,10 +1,10 @@
 use std::env;
 
-use peitho::program::Program;
+use taupe::parser::Parser;
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
-    let mut program = Program::new();
+    let mut program = Parser::new();
     program.main(args);
 }
 

@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use crate::expression::{Expression, Operand};
 
-use super::expression::ExpressionRef;
+use super::expression::{ExpressionRef, Operand, Expression};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
