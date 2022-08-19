@@ -38,7 +38,7 @@ pub enum TokenType {
     LessEqual,
 
     // -- Literals.
-    // IDENTIFIER,
+    Identifier,
     String,
     Number,
 
@@ -46,7 +46,7 @@ pub enum TokenType {
     // AND,
     // CLASS,
     Else,
-    // FALSE,
+    False,
     // FUN,
     // FOR,
     If,
@@ -56,8 +56,8 @@ pub enum TokenType {
     // RETURN,
     // SUPER,
     // THIS,
-    // TRUE,
-    // VAR,
+    True,
+    Let,
     // WHILE,
 
     // EOF,

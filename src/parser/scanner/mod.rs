@@ -66,7 +66,7 @@ impl Scanner {
                             line,
                         ))
                     }
-                },
+                }
                 '>' => {
                     if Scanner::next('=', &contents, &mut current) {
                         Some(Token::new(
@@ -83,7 +83,7 @@ impl Scanner {
                             line,
                         ))
                     }
-                },
+                }
                 '=' => {
                     if Scanner::next('=', &contents, &mut current) {
                         Some(Token::new(
@@ -105,8 +105,8 @@ impl Scanner {
                     line += 1;
                     Some(Token::new(
                         TokenType::EOL,
-                        "".to_string(),
-                        "".to_string(),
+                        '\n'.to_string(),
+                        '\n'.to_string(),
                         line,
                     ))
                 }
@@ -128,13 +128,7 @@ impl Scanner {
                 }
                 'a'..='z' | 'A'..='Z' | '_' => {
                     let identifier = Scanner::identifier(&contents, &mut current);
-                    let token_type = match Scanner::keyword(&identifier) {
-                        Ok(val) => val,
-                        Err(msg) => {
-                            program.error(line, &msg);
-                            return tokens;
-                        }
-                    };
+                    let token_type = Scanner::keyword(&identifier);
                     Some(Token::new(token_type, identifier.clone(), identifier, line))
                 }
                 '0'..='9' => {
@@ -172,15 +166,16 @@ impl Scanner {
             if let Some(new_token) = new_token {
                 tokens.push(new_token);
             }
-
-            current += 1;
         }
 
         tokens
     }
 
     fn peek(contents: &str, current: usize) -> char {
-        contents.chars().nth(current).unwrap()
+        match contents.chars().nth(current) {
+            Some(c) => c,
+            None => '\0',
+        }
     }
 
     fn advance(contents: &str, current: &mut usize) -> char {
@@ -207,6 +202,7 @@ impl Scanner {
 
             result.push(Scanner::advance(contents, current));
         }
+        *current += 1;
         Ok(result)
     }
 
@@ -227,12 +223,15 @@ impl Scanner {
         result
     }
 
-    fn keyword(identifier: &str) -> Result<TokenType, String> {
+    fn keyword(identifier: &str) -> TokenType {
         match identifier {
-            "print" => Ok(TokenType::Print),
-            "if" => Ok(TokenType::If),
-            "else" => Ok(TokenType::Else),
-            _ => Err(format!("Unrecognized keyword: {}", identifier)),
+            "print" => TokenType::Print,
+            "if" => TokenType::If,
+            "else" => TokenType::Else,
+            "true" => TokenType::True,
+            "false" => TokenType::False,
+            "let" => TokenType::Let,
+            _ => TokenType::Identifier,
         }
     }
 }

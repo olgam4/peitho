@@ -1,16 +1,17 @@
 use std::{
     env,
     fs::File,
-    io::{self, Write},
+    io::{self, Write}, collections::HashMap, rc::Rc,
 };
 
-use taupe::{parser::Parser, core::interpretation::interpret, translator::Translator};
+use taupe::{core::{interpretation::{interpret, interpret_with_state}, expression::Expression}, parser::Parser, translator::Translator};
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
     match args.len() {
         1 => {
             let mut contents = String::new();
+            let mut state = HashMap::new();
             while let Ok(n) = io::stdin().read_line(&mut contents) {
                 write!(io::stdout(), "> ").unwrap();
                 if n == 0 {
@@ -18,7 +19,18 @@ pub fn main() {
                 }
                 let tokens = Parser::new().parse(&contents);
                 contents.clear();
-                interpret(Translator::from(tokens));
+                let expr = Expression::DeriveState { expression: Translator::from(tokens) };
+                let value = interpret_with_state(Rc::new(expr), state.clone());
+                match value {
+                    taupe::core::values::Value::State(value) => {
+                        state = if let Some(value) = value {
+                            value
+                        } else {
+                            HashMap::new()
+                        };
+                    }
+                    _ => {}
+                }
             }
         }
         2 => {

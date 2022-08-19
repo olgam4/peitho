@@ -38,6 +38,8 @@ impl Translator {
                 let right = token;
                 Expression::Primitive(Primitive::Integer(right.lexeme.parse::<i32>().unwrap()))
             }
+            TokenType::True => Expression::Primitive(Primitive::Boolean(true)),
+            TokenType::False => Expression::Primitive(Primitive::Boolean(false)),
             TokenType::LeftParen => {
                 let tokens = it
                     .take_while(|t| t.token_type != TokenType::RightParen)
@@ -82,7 +84,7 @@ impl Translator {
                     then_branch: Translator::from(then_tokens),
                     else_branch: Translator::from(else_tokens),
                 }
-            },
+            }
             TokenType::Greater => {
                 let left = it.next().unwrap();
                 let right = it.next().unwrap();
@@ -101,8 +103,37 @@ impl Translator {
                     right: Translator::from(vec![right]),
                 }
             }
+            TokenType::Let => {
+                let mut variable_tokens = Vec::new();
+
+
+                let name = it.next().unwrap();
+                let _ = it.next();
+
+                while let Some(token) = it.next() {
+                    variable_tokens.push(token.clone());
+                    if token.token_type == TokenType::EOL {
+                        break;
+                    }
+                }
+
+                let value = Translator::from(variable_tokens);
+
+                let mut variables = Vec::new();
+
+                variables.push((name.lexeme.clone(), value));
+                Expression::Let {
+                    variables,
+                    scope: Translator::from(it.collect()),
+                }
+            }
+            TokenType::Identifier => {
+                let right = token;
+                Expression::Use { variable: right.lexeme.clone() }
+            }
             _ => Expression::None {},
         };
+
         Rc::new(expr)
     }
 }
@@ -231,6 +262,50 @@ mod tests {
                     expression: Rc::new(Expression::Primitive(Primitive::Integer(1)))
                 }),
                 else_branch: Rc::new(Expression::None {}),
+            })
+        );
+    }
+
+    #[test]
+    fn it_can_make_let_statements() {
+        let tokens = vec![
+            Token::new(TokenType::Let, "let".to_string(), "let".to_string(), 1),
+            Token::new(
+                TokenType::Identifier,
+                "xanax".to_string(),
+                "xanax".to_string(),
+                1,
+            ),
+            Token::new(TokenType::Equal, "=".to_string(), "=".to_string(), 1),
+            Token::new(TokenType::Number, "1".to_string(), "1".to_string(), 1),
+        ];
+
+        let expr = Translator::from(tokens);
+
+        assert_eq!(
+            expr,
+            Rc::new(Expression::Let {
+                variables: vec![(
+                    "xanax".to_string(),
+                    Rc::new(Expression::Primitive(Primitive::Integer(1)))
+                ),],
+                scope: Rc::new(Expression::None {}),
+            })
+        );
+    }
+
+    #[test]
+    fn it_can_read_variables() {
+        let tokens = vec![
+            Token::new(TokenType::Identifier, "xanax".to_string(), "xanax".to_string(), 1),
+        ];
+
+        let expr = Translator::from(tokens);
+
+        assert_eq!(
+            expr,
+            Rc::new(Expression::Use {
+                variable: "xanax".to_string(),
             })
         );
     }

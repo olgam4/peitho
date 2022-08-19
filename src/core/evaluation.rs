@@ -17,7 +17,7 @@ pub fn evaluate(
             let right_value = evaluate(&right, state)?;
             match (left_value.clone(), right_value.clone()) {
                 (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(left + right)),
-                _ => Err(Error::InvalidValues(vec![left_value, right_value])),
+                _ => Err(Error::InvalidValues("Sum".to_string(), vec![left_value, right_value])),
             }
         }
         Expression::Product { left, right } => {
@@ -25,7 +25,7 @@ pub fn evaluate(
             let right_value = evaluate(&right, state)?;
             match (left_value.clone(), right_value.clone()) {
                 (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(left * right)),
-                _ => Err(Error::InvalidValues(vec![left_value, right_value])),
+                _ => Err(Error::InvalidValues("Product".to_string(), vec![left_value, right_value])),
             }
         }
         Expression::Divide { left, right } => {
@@ -34,12 +34,12 @@ pub fn evaluate(
             match (left_value.clone(), right_value.clone()) {
                 (Value::Integer(left), Value::Integer(right)) => {
                     if right == 0 {
-                        Err(Error::InvalidValues(vec![right_value]))
+                        Err(Error::InvalidValues("Division with 0".to_string(), vec![right_value]))
                     } else {
                         Ok(Value::Float(left as f64 / right as f64))
                     }
                 }
-                _ => Err(Error::InvalidValues(vec![left_value, right_value])),
+                _ => Err(Error::InvalidValues("Divide".to_string(), vec![left_value, right_value])),
             }
         }
         Expression::If {
@@ -51,7 +51,7 @@ pub fn evaluate(
             match condition_value {
                 Value::Boolean(true) => evaluate(&then_branch, state),
                 Value::Boolean(false) => evaluate(&else_branch, state),
-                _ => Err(Error::InvalidValues(vec![condition_value])),
+                _ => Err(Error::InvalidValues("If".to_string(), vec![condition_value])),
             }
         }
         Expression::Compare {
@@ -68,7 +68,7 @@ pub fn evaluate(
                     Operand::GreaterThan => Ok(Value::Boolean(left > right)),
                     _ => Err(Error::InvalidOperand(operand.clone())),
                 },
-                _ => Err(Error::InvalidValues(vec![left_value, right_value])),
+                _ => Err(Error::InvalidValues("Compare".to_string(), vec![left_value, right_value])),
             }
         }
         Expression::Primitive(primitive) => match primitive {
@@ -136,7 +136,7 @@ pub fn evaluate(
                     }
                     Ok(Value::Unit)
                 }
-                _ => Err(Error::InvalidValues(vec![from_value, to_value])),
+                _ => Err(Error::InvalidValues("For".to_string(), vec![from_value, to_value])),
             }
         }
         Expression::Print { expression } => {
@@ -195,8 +195,12 @@ pub fn evaluate(
                     Operand::Not => Ok(Value::Boolean(!value)),
                     _ => Err(Error::InvalidOperand(operand.clone())),
                 },
-                _ => Err(Error::InvalidValues(vec![right_value])),
+                _ => Err(Error::InvalidValues("Unary".to_string(), vec![right_value])),
             }
+        }
+        Expression::DeriveState { expression } => {
+            evaluate(&expression, state)?;
+            Ok(Value::State(state.clone()))
         }
     }
 }

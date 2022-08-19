@@ -24,6 +24,6 @@ impl std::fmt::Display for Value {
 pub enum Error {
     InvalidOperand(Operand),
     InvalidExpression(Expression),
-    InvalidValues(Vec<Value>),
+    InvalidValues(String, Vec<Value>),
     UndefinedVariable(String),
 }
