@@ -7,6 +7,8 @@ pub enum Operand {
     Equals,
     LessThan,
     GreaterThan,
+    Not,
+    Negate,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -40,6 +42,10 @@ pub enum Expression {
     },
     Use {
         variable: String,
+    },
+    Unary {
+        operand: Operand,
+        right: ExpressionRef,
     },
     Assign {
         variable: String,

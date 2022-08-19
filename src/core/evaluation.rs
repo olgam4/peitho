@@ -66,6 +66,7 @@ pub fn evaluate(
                     Operand::Equals => Ok(Value::Boolean(left == right)),
                     Operand::LessThan => Ok(Value::Boolean(left < right)),
                     Operand::GreaterThan => Ok(Value::Boolean(left > right)),
+                    _ => Err(Error::InvalidOperand(operand.clone())),
                 },
                 _ => Err(Error::InvalidValues(vec![left_value, right_value])),
             }
@@ -73,6 +74,7 @@ pub fn evaluate(
         Expression::Primitive(primitive) => match primitive {
             Primitive::Integer(value) => Ok(Value::Integer(*value)),
             Primitive::String(value) => Ok(Value::String(value.clone())),
+            Primitive::Boolean(value) => Ok(Value::Boolean(*value)),
         },
         Expression::Let { variables, scope } => {
             let mut state = match state.clone() {
@@ -181,5 +183,20 @@ pub fn evaluate(
             }
             None => Err(Error::UndefinedVariable(variable.to_string())),
         },
+        Expression::Unary { operand, right } => {
+            let right_value = evaluate(&right, state)?;
+            match right_value {
+                Value::Integer(value) => match operand {
+                    Operand::Negate => Ok(Value::Integer(-value)),
+                    Operand::Not => Ok(Value::Boolean(value == 0)),
+                    _ => Err(Error::InvalidOperand(operand.clone())),
+                },
+                Value::Boolean(value) => match operand {
+                    Operand::Not => Ok(Value::Boolean(!value)),
+                    _ => Err(Error::InvalidOperand(operand.clone())),
+                },
+                _ => Err(Error::InvalidValues(vec![right_value])),
+            }
+        }
     }
 }

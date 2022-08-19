@@ -20,14 +20,85 @@ impl Scanner {
         while current < contents.len() {
             let c = Scanner::advance(&contents, &mut current);
             let new_token = match c {
-                '(' => Some(Token::new(TokenType::LeftParen, "(".to_string(), "(".to_string(), line)),
-                ')' => Some(Token::new(TokenType::RightParen, ")".to_string(), ")".to_string(), line)),
-                '+' => Some(Token::new(TokenType::Plus, "+".to_string(), "+".to_string(), line)),
+                '(' => Some(Token::new(
+                    TokenType::LeftParen,
+                    "(".to_string(),
+                    "(".to_string(),
+                    line,
+                )),
+                ')' => Some(Token::new(
+                    TokenType::RightParen,
+                    ")".to_string(),
+                    ")".to_string(),
+                    line,
+                )),
+                '+' => Some(Token::new(
+                    TokenType::Plus,
+                    "+".to_string(),
+                    "+".to_string(),
+                    line,
+                )),
+                '{' => Some(Token::new(
+                    TokenType::LeftBrace,
+                    "{".to_string(),
+                    "{".to_string(),
+                    line,
+                )),
+                '}' => Some(Token::new(
+                    TokenType::RightBrace,
+                    "}".to_string(),
+                    "}".to_string(),
+                    line,
+                )),
+                '<' => {
+                    if Scanner::next('=', &contents, &mut current) {
+                        Some(Token::new(
+                            TokenType::LessEqual,
+                            "<=".to_string(),
+                            "<=".to_string(),
+                            line,
+                        ))
+                    } else {
+                        Some(Token::new(
+                            TokenType::Less,
+                            "<".to_string(),
+                            "<".to_string(),
+                            line,
+                        ))
+                    }
+                },
+                '>' => {
+                    if Scanner::next('=', &contents, &mut current) {
+                        Some(Token::new(
+                            TokenType::GreaterEqual,
+                            ">=".to_string(),
+                            ">=".to_string(),
+                            line,
+                        ))
+                    } else {
+                        Some(Token::new(
+                            TokenType::Greater,
+                            ">".to_string(),
+                            ">".to_string(),
+                            line,
+                        ))
+                    }
+                },
                 '=' => {
                     if Scanner::next('=', &contents, &mut current) {
-                        Some(Token::new(TokenType::EqualEqual, "".to_string(), "".to_string(), line))
+                        Some(Token::new(
+                            TokenType::EqualEqual,
+                            "".to_string(),
+                            "".to_string(),
+                            line,
+                        ))
                     } else {
-                        Some(Token::new(TokenType::Equal, "".to_string(), "".to_string(), line))
+                        Some(Token::new(
+                            TokenType::Equal,
+                            "".to_string(),
+                            "".to_string(),
+                            line,
+                        ))
                     }
                 }
                 '\n' => {
@@ -75,10 +146,27 @@ impl Scanner {
                         line,
                     ))
                 }
+                '!' => {
+                    if Scanner::next('=', &contents, &mut current) {
+                        Some(Token::new(
+                            TokenType::BangEqual,
+                            "!=".to_string(),
+                            "!=".to_string(),
+                            line,
+                        ))
+                    } else {
+                        Some(Token::new(
+                            TokenType::Bang,
+                            "!".to_string(),
+                            "!".to_string(),
+                            line,
+                        ))
+                    }
+                }
                 _ => {
                     program.error(line, format!("Unexpected character: {}", c).as_str());
                     return tokens;
-                },
+                }
             };
 
             if let Some(new_token) = new_token {
@@ -127,7 +215,6 @@ impl Scanner {
         while Scanner::peek(contents, *current).is_digit(10) {
             let a = Scanner::advance(contents, current);
             result.push(a);
-
         }
         result.parse::<usize>().unwrap()
     }
@@ -143,6 +230,8 @@ impl Scanner {
     fn keyword(identifier: &str) -> Result<TokenType, String> {
         match identifier {
             "print" => Ok(TokenType::Print),
+            "if" => Ok(TokenType::If),
+            "else" => Ok(TokenType::Else),
             _ => Err(format!("Unrecognized keyword: {}", identifier)),
         }
     }
@@ -155,8 +244,8 @@ mod tests {
     #[test]
     fn test_scanner() {
         let source = "print \"Hello, world!\"";
-        let mut program = Parser::new();
-        let tokens = Scanner::new(source.to_string()).scan(&mut program);
+        let mut parser = Parser::new();
+        let tokens = Scanner::new(source.to_string()).scan(&mut parser);
 
         let expected = vec![
             Token::new(
@@ -171,6 +260,43 @@ mod tests {
                 "Hello, world!".to_string(),
                 1,
             ),
+        ];
+        assert_eq!(tokens, expected);
+    }
+
+    #[test]
+    fn it_can_create_if_statements() {
+        let source = "if ( 3 < 2 ) { print 2 } else { print 3 }";
+        let mut parser = Parser::new();
+
+        let tokens = Scanner::new(source.to_string()).scan(&mut parser);
+
+        let expected = vec![
+            Token::new(TokenType::If, "if".to_string(), "if".to_string(), 1),
+            Token::new(TokenType::LeftParen, "(".to_string(), "(".to_string(), 1),
+            Token::new(TokenType::Number, "3".to_string(), "3".to_string(), 1),
+            Token::new(TokenType::Less, "<".to_string(), "<".to_string(), 1),
+            Token::new(TokenType::Number, "2".to_string(), "2".to_string(), 1),
+            Token::new(TokenType::RightParen, ")".to_string(), ")".to_string(), 1),
+            Token::new(TokenType::LeftBrace, "{".to_string(), "{".to_string(), 1),
+            Token::new(
+                TokenType::Print,
+                "print".to_string(),
+                "print".to_string(),
+                1,
+            ),
+            Token::new(TokenType::Number, "2".to_string(), "2".to_string(), 1),
+            Token::new(TokenType::RightBrace, "}".to_string(), "}".to_string(), 1),
+            Token::new(TokenType::Else, "else".to_string(), "else".to_string(), 1),
+            Token::new(TokenType::LeftBrace, "{".to_string(), "{".to_string(), 1),
+            Token::new(
+                TokenType::Print,
+                "print".to_string(),
+                "print".to_string(),
+                1,
+            ),
+            Token::new(TokenType::Number, "3".to_string(), "3".to_string(), 1),
+            Token::new(TokenType::RightBrace, "}".to_string(), "}".to_string(), 1),
         ];
         assert_eq!(tokens, expected);
     }

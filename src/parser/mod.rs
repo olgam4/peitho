@@ -64,3 +64,49 @@ impl Parser {
         self.in_error = true;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{*, token::TokenType};
+
+    #[test]
+    fn verify_that_it_can_read_groups() {
+        let source = "( ! 2 )";
+        let mut parser = Parser::new();
+
+        let tokens = parser.parse(source);
+
+        should_equal_those(
+            tokens,
+            vec![
+                Token::new(TokenType::LeftParen, "(".to_string(), "(".to_string(), 1),
+                Token::new(TokenType::Bang, "!".to_string(), "!".to_string(), 1),
+                Token::new(TokenType::Number, "2".to_string(), "2".to_string(), 1),
+                Token::new(TokenType::RightParen, ")".to_string(), ")".to_string(), 1),
+            ],
+        )
+    }
+
+    #[test]
+    fn verify_that_it_can_read_groups_that_are_not_ed() {
+        let source = "! ( ! 2 )";
+        let mut parser = Parser::new();
+
+        let tokens = parser.parse(source);
+
+        should_equal_those(
+            tokens,
+            vec![
+                Token::new(TokenType::Bang, "!".to_string(), "!".to_string(), 1),
+                Token::new(TokenType::LeftParen, "(".to_string(), "(".to_string(), 1),
+                Token::new(TokenType::Bang, "!".to_string(), "!".to_string(), 1),
+                Token::new(TokenType::Number, "2".to_string(), "2".to_string(), 1),
+                Token::new(TokenType::RightParen, ")".to_string(), ")".to_string(), 1),
+            ],
+        )
+    }
+
+    fn should_equal_those(tokens: Vec<Token>, expected: Vec<Token>) {
+        assert_eq!(tokens, expected);
+    }
+}

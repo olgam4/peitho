@@ -1,4 +1,4 @@
-#[derive(new, Debug, PartialEq)]
+#[derive(new, Debug, Clone, PartialEq)]
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
@@ -12,13 +12,13 @@ impl std::fmt::Display for Token {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
     // -- Single-character tokens.
     LeftParen,
     RightParen,
-    // LEFTBRACE,
-    // RIGHTBRACE,
+    LeftBrace,
+    RightBrace,
     // COMMA,
     // DOT,
     // MINUS,
@@ -28,14 +28,14 @@ pub enum TokenType {
     // STAR,
 
     // -- One or two character tokens.
-    // BANG,
-    // BANGEQUAL,
+    Bang,
+    BangEqual,
     Equal,
     EqualEqual,
-    // GREATER,
-    // GREATEREQUAL,
-    // LESS,
-    // LESSEQUAL,
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
 
     // -- Literals.
     // IDENTIFIER,
@@ -45,11 +45,11 @@ pub enum TokenType {
     // -- Keywords.
     // AND,
     // CLASS,
-    // ELSE,
+    Else,
     // FALSE,
     // FUN,
     // FOR,
-    // IF,
+    If,
     // NIL,
     // OR,
     Print,
