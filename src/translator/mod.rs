@@ -12,7 +12,7 @@ pub struct Translator {}
 
 impl Translator {
     pub fn from(tokens: Vec<Token>) -> ExpressionRef {
-        let mut it = tokens.into_iter();
+        let mut it = tokens.clone().into_iter();
         let mut expr = Expression::None {};
         let token = match it.next() {
             Some(token) => token,
@@ -23,6 +23,30 @@ impl Translator {
                 let right = it.next().unwrap();
                 let left = it.next().unwrap();
                 Expression::Sum {
+                    left: Translator::from(vec![left]),
+                    right: Translator::from(vec![right]),
+                }
+            }
+            TokenType::Star => {
+                let right = it.next().unwrap();
+                let left = it.next().unwrap();
+                Expression::Product {
+                    left: Translator::from(vec![left]),
+                    right: Translator::from(vec![right]),
+                }
+            }
+            TokenType::Minus => {
+                let right = it.next().unwrap();
+                let left = it.next().unwrap();
+                Expression::Subtract {
+                    left: Translator::from(vec![left]),
+                    right: Translator::from(vec![right]),
+                }
+            }
+            TokenType::Slash => {
+                let left = it.next().unwrap();
+                let right = it.next().unwrap();
+                Expression::Divide {
                     left: Translator::from(vec![left]),
                     right: Translator::from(vec![right]),
                 }
@@ -66,10 +90,10 @@ impl Translator {
                 }
                 let mut then_tokens = Vec::new();
                 while let Some(token) = it.next() {
-                    then_tokens.push(token.clone());
                     if token.token_type == TokenType::Else {
                         break;
                     }
+                    then_tokens.push(token.clone());
                 }
                 let mut else_tokens = Vec::new();
                 while let Some(token) = it.next() {
@@ -83,6 +107,52 @@ impl Translator {
                     condition: Translator::from(condition_tokens),
                     then_branch: Translator::from(then_tokens),
                     else_branch: Translator::from(else_tokens),
+                }
+            }
+            TokenType::For => {
+                // for <var> in [<from>..<to>] { <body> }
+
+                let variable_name = it.next().unwrap().lexeme;
+
+                it.next().unwrap(); // skip 'in'
+                it.next().unwrap(); // skip '['
+
+                let mut from_tokens = Vec::new();
+                let mut include_from = true;
+
+                while let Some(token) = it.next() {
+                    if token.clone().token_type == TokenType::DotDot {
+                        include_from = false;
+                        break;
+                    }
+                    if token.clone().token_type == TokenType::DotDotEqual {
+                        break;
+                    }
+                    from_tokens.push(token.clone());
+                }
+
+                let mut to_tokens = Vec::new();
+                while let Some(token) = it.next() {
+                    if token.clone().token_type == TokenType::RightBracket {
+                        break;
+                    }
+                    to_tokens.push(token.clone());
+                }
+
+                let to = if include_from {
+                    Translator::from(to_tokens)
+                } else {
+                    Rc::new(Expression::Subtract {
+                        left: Translator::from(to_tokens),
+                        right: Rc::new(Expression::Primitive(Primitive::Integer(1))),
+                    })
+                };
+
+                Expression::For {
+                    variable: variable_name,
+                    from: Translator::from(from_tokens),
+                    to,
+                    body: Translator::from(it.collect()),
                 }
             }
             TokenType::Greater => {
@@ -106,7 +176,6 @@ impl Translator {
             TokenType::Let => {
                 let mut variable_tokens = Vec::new();
 
-
                 let name = it.next().unwrap();
                 let _ = it.next();
 
@@ -129,8 +198,14 @@ impl Translator {
             }
             TokenType::Identifier => {
                 let right = token;
-                Expression::Use { variable: right.lexeme.clone() }
+                Expression::Use {
+                    variable: right.lexeme.clone(),
+                }
             }
+            TokenType::EOL => Expression::Chain {
+                left: Translator::from(it.collect()),
+                right: Rc::new(Expression::None {}),
+            },
             _ => Expression::None {},
         };
 
@@ -296,9 +371,12 @@ mod tests {
 
     #[test]
     fn it_can_read_variables() {
-        let tokens = vec![
-            Token::new(TokenType::Identifier, "xanax".to_string(), "xanax".to_string(), 1),
-        ];
+        let tokens = vec![Token::new(
+            TokenType::Identifier,
+            "xanax".to_string(),
+            "xanax".to_string(),
+            1,
+        )];
 
         let expr = Translator::from(tokens);
 

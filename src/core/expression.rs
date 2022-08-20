@@ -26,6 +26,10 @@ pub enum Expression {
         left: ExpressionRef,
         right: ExpressionRef,
     },
+    Subtract {
+        left: ExpressionRef,
+        right: ExpressionRef,
+    },
     If {
         condition: ExpressionRef,
         then_branch: ExpressionRef,

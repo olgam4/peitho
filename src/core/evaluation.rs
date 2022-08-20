@@ -136,7 +136,7 @@ pub fn evaluate(
                     }
                     Ok(Value::Unit)
                 }
-                _ => Err(Error::InvalidValues("For".to_string(), vec![from_value, to_value])),
+                _ => Err(Error::InvalidValues("For => bad [from..to]".to_string(), vec![from_value, to_value])),
             }
         }
         Expression::Print { expression } => {
@@ -201,6 +201,14 @@ pub fn evaluate(
         Expression::DeriveState { expression } => {
             evaluate(&expression, state)?;
             Ok(Value::State(state.clone()))
+        }
+        Expression::Subtract { left, right } => {
+            let left_value = evaluate(&left, state)?;
+            let right_value = evaluate(&right, state)?;
+            match (left_value.clone(), right_value.clone()) {
+                (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(left - right)),
+                _ => Err(Error::InvalidValues("Subtract".to_string(), vec![left_value, right_value])),
+            }
         }
     }
 }

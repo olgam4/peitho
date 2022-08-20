@@ -20,6 +20,38 @@ impl Scanner {
         while current < contents.len() {
             let c = Scanner::advance(&contents, &mut current);
             let new_token = match c {
+                '.' => {
+                    if Scanner::next('.', &contents, &mut current) {
+                        if Scanner::next('=', &contents, &mut current) {
+                            Some(Token::new(
+                                TokenType::DotDotEqual,
+                                "..=".to_string(),
+                                "..=".to_string(),
+                                line,
+                            ))
+                        } else {
+                            Some(Token::new(
+                                TokenType::DotDot,
+                                "..".to_string(),
+                                "..".to_string(),
+                                line,
+                            ))
+                        }
+                    } else {
+                        Some(Token::new(
+                            TokenType::Dot,
+                            ".".to_string(),
+                            ".".to_string(),
+                            line,
+                        ))
+                    }
+                }
+                ',' => Some(Token::new(
+                    TokenType::Comma,
+                    ",".to_string(),
+                    ",".to_string(),
+                    line,
+                )),
                 '(' => Some(Token::new(
                     TokenType::LeftParen,
                     "(".to_string(),
@@ -32,10 +64,40 @@ impl Scanner {
                     ")".to_string(),
                     line,
                 )),
+                '[' => Some(Token::new(
+                    TokenType::LeftBracket,
+                    "[".to_string(),
+                    "[".to_string(),
+                    line,
+                )),
+                ']' => Some(Token::new(
+                    TokenType::RightBracket,
+                    "]".to_string(),
+                    "]".to_string(),
+                    line,
+                )),
                 '+' => Some(Token::new(
                     TokenType::Plus,
                     "+".to_string(),
                     "+".to_string(),
+                    line,
+                )),
+                '-' => Some(Token::new(
+                    TokenType::Minus,
+                    "-".to_string(),
+                    "-".to_string(),
+                    line,
+                )),
+                '/' => Some(Token::new(
+                    TokenType::Slash,
+                    "/".to_string(),
+                    "/".to_string(),
+                    line,
+                )),
+                '*' => Some(Token::new(
+                    TokenType::Star,
+                    "*".to_string(),
+                    "*".to_string(),
                     line,
                 )),
                 '{' => Some(Token::new(
@@ -231,6 +293,8 @@ impl Scanner {
             "true" => TokenType::True,
             "false" => TokenType::False,
             "let" => TokenType::Let,
+            "for" => TokenType::For,
+            "in" => TokenType::In,
             _ => TokenType::Identifier,
         }
     }

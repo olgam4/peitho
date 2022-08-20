@@ -52,7 +52,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self, source: &str) -> Vec<Token> {
-        println!("Parsing source: {}", source);
+        println!("Parsing source: \n {}", source);
         Scanner::new(source.to_string()).scan(self)
     }
 
