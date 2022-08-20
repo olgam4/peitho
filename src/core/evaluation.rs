@@ -75,6 +75,7 @@ pub fn evaluate(
             Primitive::Integer(value) => Ok(Value::Integer(*value)),
             Primitive::String(value) => Ok(Value::String(value.clone())),
             Primitive::Boolean(value) => Ok(Value::Boolean(*value)),
+            _ => Err(Error::InvalidValues(format!("Invalid primitive value, {:?}", primitive), vec![])),
         },
         Expression::Let { variables, scope } => {
             let mut state = match state.clone() {

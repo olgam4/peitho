@@ -12,46 +12,52 @@ pub struct Translator {}
 
 impl Translator {
     pub fn from(tokens: Vec<Token>) -> ExpressionRef {
+        let values = Translator::tree(tokens);
+
+        Rc::new(values)
+    }
+
+    pub fn tree(tokens: Vec<Token>) -> Expression {
         let mut it = tokens.clone().into_iter();
 
         let token = match it.next() {
             Some(val) => val,
             None => {
-                return Rc::new(Expression::None {});
+                return Expression::Primitive(Primitive::ToReplace);
             }
         };
 
-        let expr = match token.token_type {
+        let expression = match token.token_type {
             TokenType::Plus => {
                 let right = it.next().unwrap();
                 let left = it.next().unwrap();
                 Expression::Sum {
-                    left: Translator::from(vec![left]),
-                    right: Translator::from(vec![right]),
+                    left: Rc::new(Translator::tree(vec![left])),
+                    right: Rc::new(Translator::tree(vec![right])),
                 }
             }
             TokenType::Star => {
                 let right = it.next().unwrap();
                 let left = it.next().unwrap();
                 Expression::Product {
-                    left: Translator::from(vec![left]),
-                    right: Translator::from(vec![right]),
+                    left: Rc::new(Translator::tree(vec![left])),
+                    right: Rc::new(Translator::tree(vec![right])),
                 }
             }
             TokenType::Minus => {
                 let right = it.next().unwrap();
                 let left = it.next().unwrap();
                 Expression::Subtract {
-                    left: Translator::from(vec![left]),
-                    right: Translator::from(vec![right]),
+                    left: Rc::new(Translator::tree(vec![left])),
+                    right: Rc::new(Translator::tree(vec![right])),
                 }
             }
             TokenType::Slash => {
                 let left = it.next().unwrap();
                 let right = it.next().unwrap();
                 Expression::Divide {
-                    left: Translator::from(vec![left]),
-                    right: Translator::from(vec![right]),
+                    left: Rc::new(Translator::tree(vec![left])),
+                    right: Rc::new(Translator::tree(vec![right])),
                 }
             }
             TokenType::Print => {
@@ -62,8 +68,10 @@ impl Translator {
                     }
                     expression_tokens.push(token);
                 }
-                Expression::Print { expression: Translator::from(expression_tokens) }
-            },
+                Expression::Print {
+                    expression: Rc::new(Translator::tree(expression_tokens)),
+                }
+            }
             TokenType::String => {
                 let right = token;
                 Expression::Primitive(Primitive::String(right.lexeme.clone()))
@@ -75,20 +83,28 @@ impl Translator {
             TokenType::True => Expression::Primitive(Primitive::Boolean(true)),
             TokenType::False => Expression::Primitive(Primitive::Boolean(false)),
             TokenType::LeftParen => {
-                let tokens = it
-                    .take_while(|t| t.token_type != TokenType::RightParen)
-                    .collect();
-                return Translator::from(tokens);
+                let mut expression_tokens = Vec::new();
+                while let Some(token) = it.next() {
+                    expression_tokens.push(token.clone());
+                    if token.token_type == TokenType::RightParen {
+                        break;
+                    }
+                }
+                return Translator::tree(expression_tokens);
             }
             TokenType::LeftBrace => {
-                let tokens = it
-                    .take_while(|t| t.token_type != TokenType::RightBrace)
-                    .collect();
-                return Translator::from(tokens);
+                let mut expression_tokens = Vec::new();
+                while let Some(token) = it.next() {
+                    expression_tokens.push(token.clone());
+                    if token.token_type == TokenType::RightBrace {
+                        break;
+                    }
+                }
+                return Translator::tree(expression_tokens);
             }
             TokenType::Bang => Expression::Unary {
                 operand: Operand::Not,
-                right: Translator::from(vec![it.next().unwrap()]),
+                right: Rc::new(Translator::tree(vec![it.next().unwrap()])),
             },
             TokenType::If => {
                 let mut condition_tokens = Vec::new();
@@ -114,9 +130,9 @@ impl Translator {
                 }
 
                 Expression::If {
-                    condition: Translator::from(condition_tokens),
-                    then_branch: Translator::from(then_tokens),
-                    else_branch: Translator::from(else_tokens),
+                    condition: Rc::new(Translator::tree(condition_tokens)),
+                    then_branch: Rc::new(Translator::tree(then_tokens)),
+                    else_branch: Rc::new(Translator::tree(else_tokens)),
                 }
             }
             TokenType::For => {
@@ -158,38 +174,37 @@ impl Translator {
                 }
 
                 let to = if include_from {
-                    Translator::from(to_tokens)
+                    Rc::new(Translator::tree(to_tokens))
                 } else {
                     Rc::new(Expression::Subtract {
-                        left: Translator::from(to_tokens),
+                        left: Rc::new(Translator::tree(from_tokens.clone())),
                         right: Rc::new(Expression::Primitive(Primitive::Integer(1))),
                     })
                 };
-                println!("{:?}", to);
 
                 Expression::For {
                     variable: variable_name,
-                    from: Translator::from(from_tokens),
+                    from: Rc::new(Translator::tree(from_tokens.clone())),
                     to,
-                    body: Translator::from(body_tokens),
+                    body: Rc::new(Translator::tree(body_tokens.clone())),
                 }
             }
             TokenType::Greater => {
                 let left = it.next().unwrap();
                 let right = it.next().unwrap();
                 Expression::Compare {
-                    left: Translator::from(vec![left]),
+                    left: Rc::new(Translator::tree(vec![left])),
                     operand: Operand::GreaterThan,
-                    right: Translator::from(vec![right]),
+                    right: Rc::new(Translator::tree(vec![right])),
                 }
             }
             TokenType::Less => {
                 let left = it.next().unwrap();
                 let right = it.next().unwrap();
                 Expression::Compare {
-                    left: Translator::from(vec![left]),
+                    left: Rc::new(Translator::tree(vec![left])),
                     operand: Operand::LessThan,
-                    right: Translator::from(vec![right]),
+                    right: Rc::new(Translator::tree(vec![right])),
                 }
             }
             TokenType::Let => {
@@ -205,15 +220,16 @@ impl Translator {
                     }
                 }
 
-                let value = Translator::from(variable_tokens);
+                let value = Rc::new(Translator::tree(variable_tokens.clone()));
 
                 let mut variables = Vec::new();
 
                 variables.push((name.lexeme.clone(), value));
-                return Rc::new(Expression::Let {
+
+                return Expression::Let {
                     variables,
-                    scope: Translator::from(it.collect()),
-                })
+                    scope: Rc::new(Translator::tree(it.collect())),
+                };
             }
             TokenType::Identifier => {
                 let right = token;
@@ -221,11 +237,20 @@ impl Translator {
                     variable: right.lexeme.clone(),
                 }
             }
-            TokenType::EOL => Expression::Expression(Translator::from(it.collect())),
+            TokenType::EOL => {
+                return Expression::Expression(Rc::new(Translator::tree(it.collect())))
+            }
+            TokenType::Else => {
+                return Expression::Expression(Rc::new(Translator::tree(it.collect())))
+            }
             _ => Expression::None {},
         };
 
-         Rc::new(expr)
+        let tokes = it.collect();
+
+        let expression = expression.replace_with(Translator::tree(tokes));
+
+        expression
     }
 }
 

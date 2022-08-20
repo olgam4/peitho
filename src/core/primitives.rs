@@ -3,4 +3,5 @@ pub enum Primitive {
     Integer(i32),
     String(String),
     Boolean(bool),
+    ToReplace,
 }

@@ -1,10 +1,18 @@
 use std::{
     env,
     fs::File,
-    io::{self, Write}, rc::Rc,
+    io::{self, Write},
+    rc::Rc,
 };
 
-use taupe::{core::{interpretation::{interpret, interpret_with_state}, expression::Expression}, parser::Parser, translator::Translator};
+use taupe::{
+    core::{
+        expression::Expression,
+        interpretation::{interpret, interpret_with_state},
+    },
+    parser::Parser,
+    translator::Translator,
+};
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
@@ -19,7 +27,9 @@ pub fn main() {
                 }
                 let tokens = Parser::new().parse(&contents);
                 contents.clear();
-                let expr = Expression::DeriveState { expression: Translator::from(tokens) };
+                let expr = Expression::DeriveState {
+                    expression: Translator::from(tokens),
+                };
                 let value = interpret_with_state(Rc::new(expr), state.clone());
                 state = match value {
                     taupe::core::values::Value::State(value) => value,
