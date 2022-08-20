@@ -114,7 +114,7 @@ pub fn evaluate(
                                     Some(prev) => {
                                         let mut new = prev.clone();
                                         new.insert(variable.to_string(), current_value);
-                                        let state_value = evaluate(&body, &Some(prev.clone()))?;
+                                        let state_value = evaluate(&body, &Some(new.clone()))?;
                                         match state_value {
                                             Value::State(new_value) => previous_value = new_value,
                                             _ => (),
@@ -209,6 +209,11 @@ pub fn evaluate(
                 (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(left - right)),
                 _ => Err(Error::InvalidValues("Subtract".to_string(), vec![left_value, right_value])),
             }
+        }
+        Expression::Expression(expr) => {
+            let state = state.clone();
+            let result = evaluate(&expr, &state)?;
+            Ok(result)
         }
     }
 }

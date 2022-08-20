@@ -14,6 +14,7 @@ pub enum Operand {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     Primitive(Primitive),
+    Expression(ExpressionRef),
     Sum {
         left: ExpressionRef,
         right: ExpressionRef,

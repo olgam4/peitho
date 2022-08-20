@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use super::{evaluation::evaluate, expression::ExpressionRef, values::Value};
 
 pub fn interpret(expr: ExpressionRef) -> Value {
+    println!("Will try to evaluate...");
+    println!("{:?}", expr);
     match evaluate(&expr, &None) {
         Ok(value) => value,
         Err(err) => {

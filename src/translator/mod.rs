@@ -13,12 +13,15 @@ pub struct Translator {}
 impl Translator {
     pub fn from(tokens: Vec<Token>) -> ExpressionRef {
         let mut it = tokens.clone().into_iter();
-        let mut expr = Expression::None {};
+
         let token = match it.next() {
-            Some(token) => token,
-            None => return Rc::new(expr),
+            Some(val) => val,
+            None => {
+                return Rc::new(Expression::None {});
+            }
         };
-        expr = match token.token_type {
+
+        let expr = match token.token_type {
             TokenType::Plus => {
                 let right = it.next().unwrap();
                 let left = it.next().unwrap();
@@ -51,8 +54,15 @@ impl Translator {
                     right: Translator::from(vec![right]),
                 }
             }
-            TokenType::Print => Expression::Print {
-                expression: Translator::from(it.collect()),
+            TokenType::Print => {
+                let mut expression_tokens = Vec::new();
+                while let Some(token) = it.next() {
+                    if token.token_type == TokenType::EOL {
+                        break;
+                    }
+                    expression_tokens.push(token);
+                }
+                Expression::Print { expression: Translator::from(expression_tokens) }
             },
             TokenType::String => {
                 let right = token;
@@ -78,7 +88,7 @@ impl Translator {
             }
             TokenType::Bang => Expression::Unary {
                 operand: Operand::Not,
-                right: Translator::from(it.collect()),
+                right: Translator::from(vec![it.next().unwrap()]),
             },
             TokenType::If => {
                 let mut condition_tokens = Vec::new();
@@ -139,6 +149,14 @@ impl Translator {
                     to_tokens.push(token.clone());
                 }
 
+                let mut body_tokens = Vec::new();
+                while let Some(token) = it.next() {
+                    body_tokens.push(token.clone());
+                    if token.clone().token_type == TokenType::RightBrace {
+                        break;
+                    }
+                }
+
                 let to = if include_from {
                     Translator::from(to_tokens)
                 } else {
@@ -147,12 +165,13 @@ impl Translator {
                         right: Rc::new(Expression::Primitive(Primitive::Integer(1))),
                     })
                 };
+                println!("{:?}", to);
 
                 Expression::For {
                     variable: variable_name,
                     from: Translator::from(from_tokens),
                     to,
-                    body: Translator::from(it.collect()),
+                    body: Translator::from(body_tokens),
                 }
             }
             TokenType::Greater => {
@@ -191,10 +210,10 @@ impl Translator {
                 let mut variables = Vec::new();
 
                 variables.push((name.lexeme.clone(), value));
-                Expression::Let {
+                return Rc::new(Expression::Let {
                     variables,
                     scope: Translator::from(it.collect()),
-                }
+                })
             }
             TokenType::Identifier => {
                 let right = token;
@@ -202,14 +221,11 @@ impl Translator {
                     variable: right.lexeme.clone(),
                 }
             }
-            TokenType::EOL => Expression::Chain {
-                left: Translator::from(it.collect()),
-                right: Rc::new(Expression::None {}),
-            },
+            TokenType::EOL => Expression::Expression(Translator::from(it.collect())),
             _ => Expression::None {},
         };
 
-        Rc::new(expr)
+         Rc::new(expr)
     }
 }
 
