@@ -4,7 +4,7 @@ import { Provider } from '@locales'
 export default function () {
   return (
     <Provider>
-      <Title>bat</Title>
+      <Title>taupe</Title>
       <App />
     </Provider>
   )
